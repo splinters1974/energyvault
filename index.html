@@ -731,6 +731,127 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* STATS VIEW */
+  .btn-stats {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    letter-spacing: 0.02em;
+  }
+  .btn-stats:hover { color: var(--gold2); border-color: var(--gold); }
+  .btn-stats.active { color: var(--gold2); border-color: var(--gold); background: rgba(201,168,76,0.08); }
+
+  .stats-view { padding: 32px; overflow-y: auto; height: 100%; }
+
+  .stats-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--gold2);
+    margin-bottom: 24px;
+    letter-spacing: 0.02em;
+  }
+
+  .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--gold2);
+    margin-bottom: 6px;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .stats-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 24px;
+  }
+
+  .stats-section-title {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .bar-label {
+    font-size: 13px;
+    color: var(--text2);
+    width: 150px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .bar-count {
+    font-size: 12px;
+    color: var(--text3);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .stats-footer {
+    font-size: 12px;
+    color: var(--text3);
+    text-align: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
   /* SETUP SCREEN */
   .setup-screen {
     flex: 1;
@@ -797,6 +918,7 @@
       <div class="stat-pill" id="headerStats">
         <span id="totalFiles">0</span> files indexed
       </div>
+      <button class="btn-stats" id="statsBtn" onclick="toggleStats()">◎ Stats</button>
       <button class="btn-settings" onclick="openSettings()">⚙ Settings</button>
     </div>
   </header>
@@ -911,6 +1033,7 @@ const API = 'http://localhost:3747/api';
 let allFiles = [];
 let selectedFile = null;
 let searchTimer = null;
+let statsActive = false;
 
 const CATEGORIES = [
   'Smart Metering & Technology', 'B2B Sales & Accounts', 'Residential & SME',
@@ -1017,6 +1140,8 @@ function getBadgeClass(type) {
 }
 
 function selectFile(fileId) {
+  statsActive = false;
+  document.getElementById('statsBtn').classList.remove('active');
   selectedFile = allFiles.find(f => f.id === fileId);
   if (!selectedFile) return;
   renderFileList(allFiles);
@@ -1082,6 +1207,122 @@ function renderDetail(file) {
       </div>
     </div>
   `;
+}
+
+// STATS DASHBOARD
+function toggleStats() {
+  statsActive = !statsActive;
+  document.getElementById('statsBtn').classList.toggle('active', statsActive);
+  if (statsActive) {
+    selectedFile = null;
+    renderFileList(allFiles);
+    renderStatsPanel();
+  } else {
+    const panel = document.getElementById('rightPanel');
+    panel.innerHTML = `
+      <div class="detail-empty" id="detailEmpty">
+        <div class="detail-empty-icon">⚡</div>
+        <h3>Select a file to inspect</h3>
+        <p>Search or browse your archive on the left</p>
+      </div>`;
+  }
+}
+
+async function renderStatsPanel() {
+  const panel = document.getElementById('rightPanel');
+  panel.innerHTML = `<div class="stats-view"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+
+  const res = await fetch(`${API}/stats`);
+  const d = await res.json();
+
+  const pct = d.total > 0 ? Math.round((d.categorised / d.total) * 100) : 0;
+
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // File type bar colours matching badge colours
+  const typeColors = {
+    'PDF': 'var(--danger)',
+    'Word': '#4a9eed',
+    'Excel': 'var(--success)',
+    'Email': 'var(--gold)',
+    'PowerPoint': 'var(--amber)',
+    'Text': 'var(--text2)',
+    'CSV': 'var(--text2)'
+  };
+
+  const maxType = Math.max(...Object.values(d.byType), 1);
+  const typeRows = Object.entries(d.byType)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, count]) => {
+      const pctBar = Math.round((count / maxType) * 100);
+      const color = typeColors[type] || 'var(--text3)';
+      return `<div class="bar-row">
+        <span class="bar-label">${escHtml(type)}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${pctBar}%;background:${color}"></div></div>
+        <span class="bar-count">${count}</span>
+      </div>`;
+    }).join('');
+
+  const catEntries = Object.entries(d.byCategory).sort((a, b) => b[1] - a[1]);
+  const maxCat = Math.max(...catEntries.map(e => e[1]), 1);
+  const catRows = catEntries.map(([cat, count]) => {
+    const pctBar = Math.round((count / maxCat) * 100);
+    const color = cat === 'Uncategorised' ? 'var(--text3)' : 'var(--gold)';
+    return `<div class="bar-row">
+      <span class="bar-label" title="${escHtml(cat)}">${escHtml(cat)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${pctBar}%;background:${color}"></div></div>
+      <span class="bar-count">${count}</span>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="stats-view">
+      <div class="stats-heading">Archive Overview</div>
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-number">${d.total.toLocaleString()}</div>
+          <div class="stat-label">Total files</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${pct}%</div>
+          <div class="stat-label">Categorised</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${d.uncategorised.toLocaleString()}</div>
+          <div class="stat-label">Uncategorised</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${fmtSize(d.totalSize)}</div>
+          <div class="stat-label">Total size</div>
+        </div>
+      </div>
+
+      <div class="stats-columns">
+        <div>
+          <div class="stats-section-title">By File Type</div>
+          ${typeRows || '<div class="bar-label" style="color:var(--text3)">No files found</div>'}
+        </div>
+        <div>
+          <div class="stats-section-title">By Category</div>
+          ${catRows || '<div class="bar-label" style="color:var(--text3)">No categories yet</div>'}
+        </div>
+      </div>
+
+      <div class="stats-footer">
+        Archive spans ${fmtDate(d.oldest)} → ${fmtDate(d.newest)}
+      </div>
+    </div>`;
 }
 
 async function openFile() {

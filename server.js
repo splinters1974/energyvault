@@ -291,7 +291,7 @@ app.post('/api/suggest-category', async (req, res) => {
 // GET stats
 app.get('/api/stats', (req, res) => {
   const config = loadConfig();
-  if (!config.vaultPath) return res.json({ total: 0, byType: {}, byCategory: {} });
+  if (!config.vaultPath) return res.json({ total: 0, byType: {}, byCategory: {}, totalSize: 0, categorised: 0, uncategorised: 0, oldest: null, newest: null });
 
   const files = scanDirectory(config.vaultPath);
   const catFile = path.join(__dirname, 'vault-categories.json');
@@ -299,15 +299,37 @@ app.get('/api/stats', (req, res) => {
 
   const byType = {};
   const byCategory = {};
+  let totalSize = 0;
+  let categorised = 0;
+  let oldest = null;
+  let newest = null;
 
   files.forEach(f => {
     const type = getFileType('.' + f.ext.toLowerCase());
     byType[type] = (byType[type] || 0) + 1;
-    const cat = categories[f.id] || 'Uncategorised';
-    byCategory[cat] = (byCategory[cat] || 0) + 1;
+    const cat = categories[f.id] || null;
+    if (cat) {
+      categorised++;
+      byCategory[cat] = (byCategory[cat] || 0) + 1;
+    } else {
+      byCategory['Uncategorised'] = (byCategory['Uncategorised'] || 0) + 1;
+    }
+    totalSize += f.size || 0;
+    const mtime = new Date(f.modified);
+    if (!oldest || mtime < oldest) oldest = mtime;
+    if (!newest || mtime > newest) newest = mtime;
   });
 
-  res.json({ total: files.length, byType, byCategory });
+  res.json({
+    total: files.length,
+    byType,
+    byCategory,
+    totalSize,
+    categorised,
+    uncategorised: files.length - categorised,
+    oldest: oldest ? oldest.toISOString() : null,
+    newest: newest ? newest.toISOString() : null
+  });
 });
 
 const PORT = 3747;
