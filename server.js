@@ -180,9 +180,11 @@ app.post('/api/open', (req, res) => {
 
 // GET pick folder via native macOS dialog
 app.get('/api/pick-folder', (req, res) => {
-  const script = 'tell app "Finder" to POSIX path of (choose folder with prompt "Select your Centrica vault folder")';
-  exec(`osascript -e '${script}'`, (err, stdout) => {
-    if (err) return res.status(400).json({ error: 'No folder selected' });
+  exec(`osascript -e 'tell application "Finder" to activate' -e 'tell application "Finder" to POSIX path of (choose folder with prompt "Select your Centrica vault folder")'`, (err, stdout) => {
+    if (err) {
+      const cancelled = err.message && err.message.includes('-128');
+      return res.status(400).json({ error: cancelled ? 'cancelled' : 'Could not open folder picker' });
+    }
     res.json({ path: stdout.trim() });
   });
 });

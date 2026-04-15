@@ -1455,6 +1455,7 @@ async function pickFolder(targetId) {
     const res = await fetch(`${API}/pick-folder`);
     const data = await res.json();
     if (data.path) document.getElementById(targetId).value = data.path;
+    // if cancelled, do nothing silently
   } catch (e) {
     showToast('Could not open folder picker', 'error');
   }
