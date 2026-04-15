@@ -178,6 +178,15 @@ app.post('/api/open', (req, res) => {
   });
 });
 
+// GET pick folder via native macOS dialog
+app.get('/api/pick-folder', (req, res) => {
+  const script = 'tell app "Finder" to POSIX path of (choose folder with prompt "Select your Centrica vault folder")';
+  exec(`osascript -e '${script}'`, (err, stdout) => {
+    if (err) return res.status(400).json({ error: 'No folder selected' });
+    res.json({ path: stdout.trim() });
+  });
+});
+
 // POST summarise via Claude API
 app.post('/api/summarise', async (req, res) => {
   const { filePath, fileName } = req.body;
