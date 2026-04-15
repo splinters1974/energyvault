@@ -142,8 +142,19 @@ app.get('/api/files', (req, res) => {
     files = files.filter(f => new Date(f.modified) <= new Date(dateTo));
   }
 
-  // Sort by modified date desc
-  files.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+  // Sort
+  const sort = req.query.sort || 'date-desc';
+  files.sort((a, b) => {
+    switch (sort) {
+      case 'date-asc':  return new Date(a.modified) - new Date(b.modified);
+      case 'name-asc':  return a.name.localeCompare(b.name);
+      case 'name-desc': return b.name.localeCompare(a.name);
+      case 'type':      return a.typeLabel.localeCompare(b.typeLabel) || a.name.localeCompare(b.name);
+      case 'size-desc': return b.size - a.size;
+      case 'size-asc':  return a.size - b.size;
+      default:          return new Date(b.modified) - new Date(a.modified); // date-desc
+    }
+  });
 
   res.json({ files, total: files.length });
 });
@@ -166,6 +177,15 @@ app.post('/api/category', (req, res) => {
   res.json({ success: true });
 });
 
+// GET download file
+app.get('/api/download', (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath || !fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'File not found' });
+  }
+  res.download(filePath);
+});
+
 // POST open file natively
 app.post('/api/open', (req, res) => {
   const { filePath } = req.body;
@@ -180,7 +200,7 @@ app.post('/api/open', (req, res) => {
 
 // GET pick folder via native macOS dialog
 app.get('/api/pick-folder', (req, res) => {
-  exec(`osascript -e 'tell application "Finder" to activate' -e 'tell application "Finder" to POSIX path of (choose folder with prompt "Select your Centrica vault folder")'`, (err, stdout) => {
+  exec(`osascript -e 'POSIX path of (choose folder with prompt "Select your Centrica vault folder")'`, (err, stdout) => {
     if (err) {
       const cancelled = err.message && err.message.includes('-128');
       return res.status(400).json({ error: cancelled ? 'cancelled' : 'Could not open folder picker' });
