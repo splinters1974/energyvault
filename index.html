@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energy Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1710;
+    --bg2: #221f15;
+    --bg3: #2a261a;
+    --border: #3d3820;
+    --border2: #4d4828;
+    --gold: #c9a84c;
+    --gold2: #e8c56a;
+    --gold3: #f5d98a;
+    --amber: #d4822a;
+    --text: #e8dfc8;
+    --text2: #a89d82;
+    --text3: #6b6248;
+    --success: #6db57a;
+    --danger: #c96b4a;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+    --shadow2: 0 2px 12px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    height: 100vh;
+    overflow: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(212,130,42,0.03) 0%, transparent 50%);
+  }
+
+  /* LAYOUT */
+  .app { display: flex; flex-direction: column; height: 100vh; }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 60px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(26,23,16,0.95);
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--gold), var(--amber));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 12px rgba(201,168,76,0.3);
+  }
+
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--gold2), var(--gold3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.02em;
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .stat-pill {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-pill span {
+    color: var(--gold2);
+    font-weight: 500;
+  }
+
+  .btn-settings {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-settings:hover {
+    border-color: var(--gold);
+    color: var(--gold2);
+  }
+
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    width: 420px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  .search-area {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px 11px 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    transition: all 0.2s;
+    outline: none;
+  }
+
+  .search-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  }
+
+  .search-input::placeholder { color: var(--text3); }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-select {
+    flex: 1;
+    min-width: 110px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .filter-select:focus { border-color: var(--gold); }
+
+  .date-filters {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .date-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: dark;
+  }
+
+  .date-input:focus { border-color: var(--gold); }
+
+  .results-header {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results-count {
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .results-count strong {
+    color: var(--gold2);
+    font-weight: 500;
+  }
+
+  .btn-suggest-all {
+    background: linear-gradient(135deg, var(--gold), var(--amber));
+    border: none;
+    color: var(--bg);
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-suggest-all:hover { opacity: 0.85; }
+  .btn-suggest-all:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* FILE LIST */
+  .file-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .file-list::-webkit-scrollbar { width: 4px; }
+  .file-list::-webkit-scrollbar-track { background: transparent; }
+  .file-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .file-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+
+  .file-item:hover { background: rgba(201,168,76,0.04); }
+
+  .file-item.active {
+    background: rgba(201,168,76,0.08);
+    border-left-color: var(--gold);
+  }
+
+  .file-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .file-type-badge {
+    flex-shrink: 0;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .badge-pdf { background: rgba(201,68,68,0.2); color: #e88080; border: 1px solid rgba(201,68,68,0.3); }
+  .badge-word { background: rgba(68,120,201,0.2); color: #80aaee; border: 1px solid rgba(68,120,201,0.3); }
+  .badge-excel { background: rgba(68,168,100,0.2); color: #80c890; border: 1px solid rgba(68,168,100,0.3); }
+  .badge-email { background: rgba(201,168,76,0.2); color: var(--gold2); border: 1px solid rgba(201,168,76,0.3); }
+  .badge-powerpoint { background: rgba(212,130,42,0.2); color: #e8a870; border: 1px solid rgba(212,130,42,0.3); }
+  .badge-default { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+
+  .file-name {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 400;
+    line-height: 1.4;
+    flex: 1;
+    word-break: break-word;
+  }
+
+  .file-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .file-date { }
+  .file-size { }
+
+  .file-category {
+    margin-left: auto;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--gold);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text3);
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .no-results-icon { font-size: 32px; opacity: 0.4; }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .detail-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text3);
+  }
+
+  .detail-empty-icon {
+    font-size: 56px;
+    opacity: 0.15;
+  }
+
+  .detail-empty h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--text3);
+    font-weight: 400;
+  }
+
+  .detail-empty p {
+    font-size: 13px;
+    opacity: 0.6;
+  }
+
+  .detail-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .detail-header {
+    padding: 24px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .detail-file-type {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .detail-filename {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 14px;
+  }
+
+  .detail-meta-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .detail-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .detail-meta-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+  }
+
+  .detail-meta-value {
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .detail-actions {
+    padding: 16px 32px;
+    display: flex;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--amber));
+    border: none;
+    color: var(--bg);
+    font-weight: 500;
+  }
+
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--gold);
+    color: var(--gold2);
+  }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  .category-assign {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .category-label {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .category-select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .category-select:focus { border-color: var(--gold); }
+
+  .btn-save-cat {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--gold2);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-save-cat:hover { border-color: var(--gold); }
+
+  /* SUMMARY AREA */
+  .summary-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+  }
+
+  .summary-area::-webkit-scrollbar { width: 4px; }
+  .summary-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .summary-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    color: var(--text3);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .summary-placeholder-icon { font-size: 40px; opacity: 0.2; }
+
+  .summary-content {
+    animation: fadeIn 0.3s ease;
+  }
+
+  .summary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--gold2);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .summary-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  .summary-text {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .summary-text p { margin-bottom: 14px; }
+
+  .loading-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .loading-dots span {
+    width: 6px; height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* SETTINGS MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 32px;
+    width: 480px;
+    box-shadow: var(--shadow);
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--gold2);
+    margin-bottom: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--gold); }
+
+  .form-hint {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+    z-index: 200;
+    animation: slideUp 0.3s ease;
+    max-width: 320px;
+  }
+
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SETUP SCREEN */
+  .setup-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .setup-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 48px;
+    width: 480px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .setup-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .setup-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--gold2);
+    margin-bottom: 10px;
+  }
+
+  .setup-sub {
+    font-size: 14px;
+    color: var(--text3);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .path-example {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: monospace;
+    margin-top: 6px;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <div class="logo-text">Energy Vault</div>
+        <div class="logo-sub">Centrica Archive Intelligence</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="stat-pill" id="headerStats">
+        <span id="totalFiles">0</span> files indexed
+      </div>
+      <button class="btn-settings" onclick="openSettings()">⚙ Settings</button>
+    </div>
+  </header>
+
+  <div id="mainContent" class="main" style="display:none">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+      <div class="search-area">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="searchInput"
+            placeholder="Search files, keywords, topics…"
+            oninput="debounceSearch()">
+        </div>
+        <div class="filters">
+          <select class="filter-select" id="typeFilter" onchange="doSearch()">
+            <option value="">All file types</option>
+            <option value="PDF">PDF</option>
+            <option value="Word">Word</option>
+            <option value="Excel">Excel</option>
+            <option value="Email">Email</option>
+            <option value="PowerPoint">PowerPoint</option>
+            <option value="Text">Text</option>
+          </select>
+          <select class="filter-select" id="categoryFilter" onchange="doSearch()">
+            <option value="">All categories</option>
+          </select>
+        </div>
+        <div class="date-filters">
+          <input type="date" class="date-input" id="dateFrom" placeholder="From date" onchange="doSearch()">
+          <input type="date" class="date-input" id="dateTo" placeholder="To date" onchange="doSearch()">
+        </div>
+      </div>
+
+      <div class="results-header">
+        <div class="results-count">
+          Showing <strong id="resultCount">0</strong> files
+        </div>
+        <button class="btn-suggest-all" id="suggestAllBtn" onclick="suggestAllCategories()">
+          ✦ Auto-categorise all
+        </button>
+      </div>
+
+      <div class="file-list" id="fileList">
+        <div class="no-results">
+          <div class="no-results-icon">📂</div>
+          <div>No files found</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel" id="rightPanel">
+      <div class="detail-empty" id="detailEmpty">
+        <div class="detail-empty-icon">⚡</div>
+        <h3>Select a file to inspect</h3>
+        <p>Search or browse your archive on the left</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen" class="setup-screen">
+    <div class="setup-card">
+      <span class="setup-icon">⚡</span>
+      <div class="setup-title">Energy Vault</div>
+      <p class="setup-sub">Your personal Centrica archive intelligence tool.<br>Point it at your files to get started.</p>
+      <div class="form-group" style="text-align:left">
+        <label class="form-label">Vault folder path</label>
+        <input type="text" class="form-input" id="setupPath"
+          placeholder="/Volumes/MyDrive/Centrica">
+        <div class="path-example">e.g. /Volumes/MyDrive/Centrica</div>
+      </div>
+      <div class="form-group" style="text-align:left">
+        <label class="form-label">Anthropic API key</label>
+        <input type="password" class="form-input" id="setupApiKey"
+          placeholder="sk-ant-…">
+        <div class="form-hint">Used locally for AI summarisation and auto-categorisation. Never sent anywhere except Anthropic's API.</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveSetup()">
+        Open Vault →
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">⚙ Settings</div>
+    <div class="form-group">
+      <label class="form-label">Vault folder path</label>
+      <input type="text" class="form-input" id="settingsPath" placeholder="/Volumes/MyDrive/Centrica">
+      <div class="form-hint">Full path to the folder on your Mac or external drive.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Anthropic API key</label>
+      <input type="password" class="form-input" id="settingsApiKey" placeholder="sk-ant-…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3747/api';
+let allFiles = [];
+let selectedFile = null;
+let searchTimer = null;
+
+const CATEGORIES = [
+  'Smart Metering & Technology', 'B2B Sales & Accounts', 'Residential & SME',
+  'Contracts & Commercial', 'Strategy & Market Analysis', 'Energy Products & Tariffs',
+  'Regulatory & Compliance', 'Internal Comms & HR', 'Finance & Reporting',
+  'Operations & Field', 'Partnerships & Third Party', 'Marketing & Communications', 'Other'
+];
+
+// INIT
+async function init() {
+  try {
+    const res = await fetch(`${API}/config`);
+    const config = await res.json();
+    if (config.vaultPath) {
+      showMain();
+      await doSearch();
+      loadCategories();
+      loadStats();
+    } else {
+      showSetup();
+    }
+  } catch (e) {
+    showSetup();
+  }
+}
+
+function showMain() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'flex';
+}
+
+function showSetup() {
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('mainContent').style.display = 'none';
+}
+
+async function saveSetup() {
+  const path = document.getElementById('setupPath').value.trim();
+  const apiKey = document.getElementById('setupApiKey').value.trim();
+  if (!path) { showToast('Please enter a folder path', 'error'); return; }
+  await fetch(`${API}/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vaultPath: path, apiKey })
+  });
+  showMain();
+  await doSearch();
+  loadCategories();
+  loadStats();
+}
+
+// SEARCH
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(doSearch, 300);
+}
+
+async function doSearch() {
+  const search = document.getElementById('searchInput').value;
+  const type = document.getElementById('typeFilter').value;
+  const category = document.getElementById('categoryFilter').value;
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+
+  const params = new URLSearchParams({ search, type, category, dateFrom, dateTo });
+  const res = await fetch(`${API}/files?${params}`);
+  const data = await res.json();
+  allFiles = data.files;
+  document.getElementById('resultCount').textContent = data.total;
+  renderFileList(data.files);
+}
+
+function renderFileList(files) {
+  const list = document.getElementById('fileList');
+  if (!files.length) {
+    list.innerHTML = `<div class="no-results"><div class="no-results-icon">📂</div><div>No files found</div></div>`;
+    return;
+  }
+
+  list.innerHTML = files.map(f => {
+    const badgeClass = getBadgeClass(f.typeLabel);
+    const date = new Date(f.modified).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+    const isActive = selectedFile && selectedFile.id === f.id ? 'active' : '';
+    const catHtml = f.category ? `<span class="file-category">${f.category}</span>` : '';
+    return `
+      <div class="file-item ${isActive}" onclick="selectFile('${f.id}')">
+        <div class="file-top">
+          <span class="file-type-badge ${badgeClass}">${f.typeLabel}</span>
+          <span class="file-name">${escHtml(f.name)}</span>
+        </div>
+        <div class="file-meta">
+          <span class="file-date">${date}</span>
+          <span class="file-size">${f.sizeLabel}</span>
+          ${catHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getBadgeClass(type) {
+  const map = { 'PDF': 'badge-pdf', 'Word': 'badge-word', 'Excel': 'badge-excel', 'Email': 'badge-email', 'PowerPoint': 'badge-powerpoint' };
+  return map[type] || 'badge-default';
+}
+
+function selectFile(fileId) {
+  selectedFile = allFiles.find(f => f.id === fileId);
+  if (!selectedFile) return;
+  renderFileList(allFiles);
+  renderDetail(selectedFile);
+}
+
+function renderDetail(file) {
+  const panel = document.getElementById('rightPanel');
+  const date = new Date(file.modified).toLocaleDateString('en-GB', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const badgeClass = getBadgeClass(file.typeLabel);
+  const catOptions = CATEGORIES.map(c =>
+    `<option value="${c}" ${file.category === c ? 'selected' : ''}>${c}</option>`
+  ).join('');
+
+  panel.innerHTML = `
+    <div class="detail-view">
+      <div class="detail-header">
+        <div class="detail-file-type">
+          <span class="file-type-badge ${badgeClass}" style="display:inline">${file.typeLabel}</span>
+        </div>
+        <div class="detail-filename">${escHtml(file.name)}</div>
+        <div class="detail-meta-row">
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">Last modified</span>
+            <span class="detail-meta-value">${date}</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">File size</span>
+            <span class="detail-meta-value">${file.sizeLabel}</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">Location</span>
+            <span class="detail-meta-value" style="font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(file.path)}">${escHtml(file.path)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn btn-primary" onclick="openFile()">
+          ↗ Open file
+        </button>
+        <button class="btn btn-secondary" id="summariseBtn" onclick="summariseFile()">
+          ✦ Summarise
+        </button>
+        <button class="btn btn-secondary" onclick="suggestCategory()">
+          ⟳ Suggest category
+        </button>
+        <div class="category-assign">
+          <span class="category-label">Category:</span>
+          <select class="category-select" id="categorySelect">
+            <option value="">— Uncategorised —</option>
+            ${catOptions}
+          </select>
+          <button class="btn-save-cat" onclick="saveCategory()">Save</button>
+        </div>
+      </div>
+
+      <div class="summary-area" id="summaryArea">
+        <div class="summary-placeholder">
+          <div class="summary-placeholder-icon">✦</div>
+          <p>Click <strong style="color:var(--gold2)">Summarise</strong> to generate an AI summary of this document</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function openFile() {
+  if (!selectedFile) return;
+  await fetch(`${API}/open`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filePath: selectedFile.path })
+  });
+}
+
+async function summariseFile() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('summariseBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  document.getElementById('summaryArea').innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div>`;
+
+  try {
+    const res = await fetch(`${API}/summarise`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath: selectedFile.path, fileName: selectedFile.name })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const paragraphs = data.summary.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+    document.getElementById('summaryArea').innerHTML = `
+      <div class="summary-content">
+        <div class="summary-title">✦ AI Summary</div>
+        <div class="summary-text">${paragraphs}</div>
+      </div>
+    `;
+  } catch (e) {
+    document.getElementById('summaryArea').innerHTML = `<div class="summary-placeholder"><div>Error: ${e.message}</div></div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = '✦ Summarise';
+}
+
+async function suggestCategory() {
+  if (!selectedFile) return;
+  showToast('Suggesting category…');
+  const res = await fetch(`${API}/suggest-category`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileName: selectedFile.name, filePath: selectedFile.path })
+  });
+  const data = await res.json();
+  if (data.category) {
+    document.getElementById('categorySelect').value = data.category;
+    showToast(`Suggested: ${data.category}`, 'success');
+  }
+}
+
+async function saveCategory() {
+  if (!selectedFile) return;
+  const category = document.getElementById('categorySelect').value;
+  await fetch(`${API}/category`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileId: selectedFile.id, category })
+  });
+  selectedFile.category = category;
+  showToast('Category saved', 'success');
+  loadCategories();
+  await doSearch();
+}
+
+async function suggestAllCategories() {
+  const uncategorised = allFiles.filter(f => !f.category);
+  if (!uncategorised.length) { showToast('All files already have categories', 'success'); return; }
+  const btn = document.getElementById('suggestAllBtn');
+  btn.disabled = true;
+  btn.textContent = `Processing 0 / ${uncategorised.length}…`;
+
+  for (let i = 0; i < uncategorised.length; i++) {
+    const f = uncategorised[i];
+    btn.textContent = `Processing ${i+1} / ${uncategorised.length}…`;
+    try {
+      const res = await fetch(`${API}/suggest-category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: f.name, filePath: f.path })
+      });
+      const data = await res.json();
+      if (data.category) {
+        await fetch(`${API}/category`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileId: f.id, category: data.category })
+        });
+      }
+    } catch (e) { /* continue */ }
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✦ Auto-categorise all';
+  showToast(`Categorised ${uncategorised.length} files`, 'success');
+  loadCategories();
+  await doSearch();
+}
+
+async function loadCategories() {
+  const res = await fetch(`${API}/categories`);
+  const data = await res.json();
+  const sel = document.getElementById('categoryFilter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All categories</option>' +
+    data.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (current) sel.value = current;
+}
+
+async function loadStats() {
+  const res = await fetch(`${API}/stats`);
+  const data = await res.json();
+  document.getElementById('totalFiles').textContent = data.total;
+}
+
+// SETTINGS
+function openSettings() {
+  fetch(`${API}/config`).then(r => r.json()).then(config => {
+    document.getElementById('settingsPath').value = config.vaultPath || '';
+    document.getElementById('settingsModal').style.display = 'flex';
+  });
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').style.display = 'none';
+}
+
+async function saveSettings() {
+  const vaultPath = document.getElementById('settingsPath').value.trim();
+  const apiKey = document.getElementById('settingsApiKey').value.trim();
+  await fetch(`${API}/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vaultPath, ...(apiKey ? { apiKey } : {}) })
+  });
+  closeSettings();
+  showToast('Settings saved', 'success');
+  await doSearch();
+  loadStats();
+}
+
+// TOAST
+function showToast(msg, type = '') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close modal on overlay click
+document.getElementById('settingsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+
+init();
+</script>
+</body>
+</html>
