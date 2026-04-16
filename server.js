@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { exec } = require('child_process');
 const cors = require('cors');
 const MsgReader = require('@kenjiuno/msgreader').default;
@@ -10,7 +11,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const CONFIG_FILE = path.join(__dirname, 'vault-config.json');
+const CONFIG_FILE = path.join(os.homedir(), '.energy-vault-config.json');
+const CATEGORIES_FILE = path.join(os.homedir(), '.energy-vault-categories.json');
 
 // Load or initialise config
 function loadConfig() {
@@ -112,7 +114,7 @@ app.get('/api/files', (req, res) => {
   let files = scanDirectory(config.vaultPath);
 
   // Load saved categories
-  const catFile = path.join(__dirname, 'vault-categories.json');
+  const catFile = CATEGORIES_FILE;
   const categories = fs.existsSync(catFile) ? JSON.parse(fs.readFileSync(catFile, 'utf8')) : {};
   files = files.map(f => ({ ...f, category: categories[f.id] || null, typeLabel: getFileType('.' + f.ext.toLowerCase()), sizeLabel: formatSize(f.size) }));
 
@@ -162,7 +164,7 @@ app.get('/api/files', (req, res) => {
 
 // GET categories list
 app.get('/api/categories', (req, res) => {
-  const catFile = path.join(__dirname, 'vault-categories.json');
+  const catFile = CATEGORIES_FILE;
   const categories = fs.existsSync(catFile) ? JSON.parse(fs.readFileSync(catFile, 'utf8')) : {};
   const unique = [...new Set(Object.values(categories))].filter(Boolean).sort();
   res.json({ categories: unique });
@@ -171,7 +173,7 @@ app.get('/api/categories', (req, res) => {
 // POST save category for a file
 app.post('/api/category', (req, res) => {
   const { fileId, category } = req.body;
-  const catFile = path.join(__dirname, 'vault-categories.json');
+  const catFile = CATEGORIES_FILE;
   const categories = fs.existsSync(catFile) ? JSON.parse(fs.readFileSync(catFile, 'utf8')) : {};
   categories[fileId] = category;
   fs.writeFileSync(catFile, JSON.stringify(categories, null, 2));
@@ -347,7 +349,7 @@ app.get('/api/stats', (req, res) => {
   if (!config.vaultPath) return res.json({ total: 0, byType: {}, byCategory: {}, totalSize: 0, categorised: 0, uncategorised: 0, oldest: null, newest: null });
 
   const files = scanDirectory(config.vaultPath);
-  const catFile = path.join(__dirname, 'vault-categories.json');
+  const catFile = CATEGORIES_FILE;
   const categories = fs.existsSync(catFile) ? JSON.parse(fs.readFileSync(catFile, 'utf8')) : {};
 
   const byType = {};
