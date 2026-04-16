@@ -731,6 +731,58 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* SORT */
+  .sort-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px;
+    margin-top: 6px;
+  }
+  .sort-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .sort-select {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .sort-select:focus { outline: none; border-color: var(--gold); }
+
+  /* API KEY STATUS */
+  .api-key-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--success);
+  }
+  .api-key-status span { color: var(--text3); font-size: 12px; }
+  .btn-change-key {
+    background: none;
+    border: none;
+    color: var(--gold);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-change-key:hover { color: var(--gold2); }
+
   /* STATS VIEW */
   .btn-stats {
     background: transparent;
@@ -952,6 +1004,18 @@
           <input type="date" class="date-input" id="dateFrom" placeholder="From date" onchange="doSearch()">
           <input type="date" class="date-input" id="dateTo" placeholder="To date" onchange="doSearch()">
         </div>
+        <div class="sort-row">
+          <span class="sort-label">Sort</span>
+          <select class="sort-select" id="sortSelect" onchange="doSearch()">
+            <option value="date-desc">Date modified (newest)</option>
+            <option value="date-asc">Date modified (oldest)</option>
+            <option value="name-asc">File name (A–Z)</option>
+            <option value="name-desc">File name (Z–A)</option>
+            <option value="type">File type</option>
+            <option value="size-desc">Size (largest first)</option>
+            <option value="size-asc">Size (smallest first)</option>
+          </select>
+        </div>
       </div>
 
       <div class="results-header">
@@ -1025,7 +1089,15 @@
     </div>
     <div class="form-group">
       <label class="form-label">Anthropic API key</label>
-      <input type="password" class="form-input" id="settingsApiKey" placeholder="sk-ant-…">
+      <div id="apiKeyStatus" style="display:none">
+        <div class="api-key-status">
+          ✓ API key configured <span>(saved locally)</span>
+          <button class="btn-change-key" onclick="showApiKeyInput()">Change key</button>
+        </div>
+      </div>
+      <div id="apiKeyInput" style="display:none">
+        <input type="password" class="form-input" id="settingsApiKey" placeholder="sk-ant-…">
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
@@ -1103,8 +1175,9 @@ async function doSearch() {
   const category = document.getElementById('categoryFilter').value;
   const dateFrom = document.getElementById('dateFrom').value;
   const dateTo = document.getElementById('dateTo').value;
+  const sort = document.getElementById('sortSelect').value;
 
-  const params = new URLSearchParams({ search, type, category, dateFrom, dateTo });
+  const params = new URLSearchParams({ search, type, category, dateFrom, dateTo, sort });
   const res = await fetch(`${API}/files?${params}`);
   const data = await res.json();
   allFiles = data.files;
@@ -1189,6 +1262,9 @@ function renderDetail(file) {
         <button class="btn btn-primary" onclick="openFile()">
           ↗ Open file
         </button>
+        <a class="btn btn-secondary" id="downloadBtn" href="${API}/download?path=${encodeURIComponent(file.path)}" download="${escHtml(file.name)}">
+          ↓ Download
+        </a>
         <button class="btn btn-secondary" id="summariseBtn" onclick="summariseFile()">
           ✦ Summarise
         </button>
@@ -1465,8 +1541,22 @@ async function pickFolder(targetId) {
 function openSettings() {
   fetch(`${API}/config`).then(r => r.json()).then(config => {
     document.getElementById('settingsPath').value = config.vaultPath || '';
+    if (config.hasApiKey) {
+      document.getElementById('apiKeyStatus').style.display = 'block';
+      document.getElementById('apiKeyInput').style.display = 'none';
+      document.getElementById('settingsApiKey').value = '';
+    } else {
+      document.getElementById('apiKeyStatus').style.display = 'none';
+      document.getElementById('apiKeyInput').style.display = 'block';
+    }
     document.getElementById('settingsModal').style.display = 'flex';
   });
+}
+
+function showApiKeyInput() {
+  document.getElementById('apiKeyStatus').style.display = 'none';
+  document.getElementById('apiKeyInput').style.display = 'block';
+  document.getElementById('settingsApiKey').focus();
 }
 
 function closeSettings() {
