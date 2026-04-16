@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 const cors = require('cors');
+const MsgReader = require('@kenjiuno/msgreader').default;
 
 const app = express();
 app.use(cors());
@@ -234,6 +235,27 @@ app.post('/api/summarise', async (req, res) => {
         {
           type: 'text',
           text: `Please provide a concise professional summary of this document called "${fileName}". Include: what it covers, key topics or decisions, any notable figures or clients mentioned, and why it might be useful to reference. Keep it to 3-4 paragraphs maximum.`
+        }
+      ];
+    } else if (ext === '.msg') {
+      // Parse Outlook .msg binary format
+      try {
+        const buffer = fs.readFileSync(filePath);
+        const reader = new MsgReader(buffer);
+        const msgData = reader.getFileData();
+        const subject = msgData.subject || '(no subject)';
+        const sender = [msgData.senderName, msgData.senderSmtpAddress].filter(Boolean).join(' ');
+        const recipients = (msgData.recipients || []).map(r => r.name || r.smtpAddress).filter(Boolean).join(', ');
+        const date = msgData.messageDeliveryTime || '';
+        const body = (msgData.body || '').substring(0, 6000);
+        content = `Subject: ${subject}\nFrom: ${sender}\nTo: ${recipients}\nDate: ${date}\n\n${body}`;
+      } catch (e) {
+        content = `File: ${fileName} (could not parse .msg content)`;
+      }
+      messageContent = [
+        {
+          type: 'text',
+          text: `Please provide a concise professional summary of this Outlook email called "${fileName}". Here is its content:\n\n${content}\n\nInclude: who sent it and to whom, what it is about, any key decisions or actions, notable clients or projects mentioned, and why it might be useful to reference. Keep it to 3-4 paragraphs maximum.`
         }
       ];
     } else if (['.doc', '.docx', '.xls', '.xlsx', '.eml', '.txt', '.csv'].includes(ext)) {

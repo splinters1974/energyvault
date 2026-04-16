@@ -181,7 +181,7 @@
     background: var(--bg3);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 11px 14px 11px 40px;
+    padding: 11px 36px 11px 40px;
     border-radius: 8px;
     font-size: 14px;
     font-family: 'DM Sans', sans-serif;
@@ -196,6 +196,35 @@
   }
 
   .search-input::placeholder { color: var(--text3); }
+
+  .btn-clear-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+    display: none;
+  }
+  .btn-clear-search:hover { color: var(--text); }
+
+  .btn-reset-filters {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-reset-filters:hover { color: var(--gold); border-color: var(--gold); }
 
   .filters {
     display: flex;
@@ -984,7 +1013,8 @@
           <span class="search-icon">🔍</span>
           <input type="text" class="search-input" id="searchInput"
             placeholder="Search files, keywords, topics…"
-            oninput="debounceSearch()">
+            oninput="debounceSearch(); toggleClearBtn()">
+          <button class="btn-clear-search" id="clearSearchBtn" onclick="clearSearch()" title="Clear search">×</button>
         </div>
         <div class="filters">
           <select class="filter-select" id="typeFilter" onchange="doSearch()">
@@ -1022,9 +1052,12 @@
         <div class="results-count">
           Showing <strong id="resultCount">0</strong> files
         </div>
-        <button class="btn-suggest-all" id="suggestAllBtn" onclick="suggestAllCategories()">
-          ✦ Auto-categorise all
-        </button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-reset-filters" onclick="resetAllFilters()" title="Clear all filters">✕ Clear</button>
+          <button class="btn-suggest-all" id="suggestAllBtn" onclick="suggestAllCategories()">
+            ✦ Auto-categorise all
+          </button>
+        </div>
       </div>
 
       <div class="file-list" id="fileList">
@@ -1164,6 +1197,29 @@ async function saveSetup() {
 }
 
 // SEARCH
+function toggleClearBtn() {
+  const btn = document.getElementById('clearSearchBtn');
+  if (btn) btn.style.display = document.getElementById('searchInput').value ? 'block' : 'none';
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('clearSearchBtn').style.display = 'none';
+  doSearch();
+}
+
+function resetAllFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('typeFilter').value = '';
+  document.getElementById('categoryFilter').value = '';
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  document.getElementById('sortSelect').value = 'date-desc';
+  const btn = document.getElementById('clearSearchBtn');
+  if (btn) btn.style.display = 'none';
+  doSearch();
+}
+
 function debounceSearch() {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(doSearch, 300);
